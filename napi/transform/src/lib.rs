@@ -43,10 +43,42 @@ pub struct SourceMap {
     pub ignore_list: Option<Vec<u32>>,
     pub mappings: String,
 }
-impl From<OxcSourceMap> for SourceMap {
-    fn from(sourcemap: OxcSourceMap) -> Self {
+
+/// TODO: impl [`std::fmt::Display`] and maybe std::error::Error for [`oxc_sourcemap::Error`]
+///
+/// https://github.com/oxc-project/oxc/pull/3902
+fn from_oxc_error(err: oxc_sourcemap::Error) -> napi::Error {
+    match err {
+        oxc_sourcemap::Error::VlqLeftover => {
+            Error::from_reason("a VLQ string was malformed and data was left over")
+        }
+        oxc_sourcemap::Error::VlqNoValues => {
+            Error::from_reason("a VLQ string was empty and no values could be decoded")
+        }
+        oxc_sourcemap::Error::VlqOverflow => {
+            Error::from_reason("The input encoded a number that didn't fit into i64")
+        }
+        oxc_sourcemap::Error::BadJson(err) => {
+            Error::from_reason(format!("JSON parsing error: {err}"))
+        }
+        oxc_sourcemap::Error::BadSegmentSize(size) => {
+            Error::from_reason(format!("Mapping segment had an unsupported size of {size}"))
+        }
+        oxc_sourcemap::Error::BadSourceReference(idx) => Error::from_reason(format!(
+            "Reference to non-existing source at position {idx}"
+        )),
+        oxc_sourcemap::Error::BadNameReference(idx) => {
+            Error::from_reason(format!("Reference to non-existing name at position {idx}"))
+        }
+    }
+}
+
+impl TryFrom<OxcSourceMap> for SourceMap {
+    type Error = napi::Error;
+    fn try_from(sourcemap: OxcSourceMap) -> Result<Self, Self::Error> {
+        let mappings = sourcemap.to_json_string().map_err(from_oxc_error)?;
         // TODO: do not clone once fields are exposed from oxc_sourcemap
-        Self {
+        Ok(Self {
             file: sourcemap.get_file().map(ToString::to_string),
             names: sourcemap.get_names().map(Into::into).collect(),
             source_root: sourcemap.get_source_root().map(ToString::to_string),
@@ -55,9 +87,9 @@ impl From<OxcSourceMap> for SourceMap {
                 .get_source_contents()
                 .map(|sources_content| sources_content.map(|s| Some(s.into())).collect()),
             version: 3,
-            ignore_list: None,       // TODO: not exposed,
-            mappings: String::new(), // TODO: not implemented in oxc_sourcemap
-        }
+            ignore_list: None, // TODO: not exposed,
+            mappings,
+        })
     }
 }
 
@@ -95,8 +127,15 @@ pub fn transform(
 
     let path = Path::new(&filename);
     let options = TransformOptions::default();
-    let ret = Transformer::new(&allocator, path, source_type, &source_text, trivias, options)
-        .build(&mut program);
+    let ret = Transformer::new(
+        &allocator,
+        path,
+        source_type,
+        &source_text,
+        trivias,
+        options,
+    )
+    .build(&mut program);
     if let Err(errors) = ret {
         if !errors.is_empty() {
             return Err(Error::from_reason(format!("{}", errors[0])));
@@ -104,11 +143,18 @@ pub fn transform(
     }
 
     // TODO: source maps before transforming
-    let CodegenReturn { source_text, source_map } = Codegen::<false>::new()
+    let CodegenReturn {
+        source_text,
+        source_map,
+    } = Codegen::<false>::new()
         .enable_source_map(&filename, &source_text)
         .build(&program);
 
-    Ok(TransformResult { source_text, source_map: source_map.map(SourceMap::from) })
+    let source_map = source_map.map(SourceMap::try_from).transpose()?;
+    Ok(TransformResult {
+        source_text,
+        source_map: source_map.map(SourceMap::from),
+    })
 }
 
 #[napi]
@@ -118,7 +164,7 @@ pub async fn transform_async(
     // TODO
     // options: Option<TransformOptions>,
 ) -> Result<TransformResult, Error> {
-    tokio::spawn(async move {
-        transform(filename, source_text)
-    }).await.map_err(|e| Error::from_reason(e.to_string()))?
+    tokio::spawn(async move { transform(filename, source_text) })
+        .await
+        .map_err(|e| Error::from_reason(e.to_string()))?
 }
