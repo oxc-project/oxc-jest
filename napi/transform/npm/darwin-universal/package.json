@@ -1,0 +1,15 @@
+{
+  "name": "@oxc-jest/transform-darwin-universal",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "main": "transform.darwin-universal.node",
+  "files": [
+    "transform.darwin-universal.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}

@@ -1,0 +1,39 @@
+[package]
+name = "oxc-jest_transform"
+version = "0.0.0"
+authors.workspace      = true
+categories.workspace   = true
+license.workspace      = true
+keywords.workspace     = true
+rust-version.workspace = true
+edition.workspace      = true
+publish                = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+oxc_allocator = { workspace = true }
+oxc_codegen = { workspace = true }
+oxc_parser = { workspace = true }
+oxc_sourcemap = { workspace = true }
+oxc_span = { workspace = true }
+oxc_syntax = { workspace = true }
+oxc_transformer = { workspace = true }
+
+itertools = { workspace = true }
+tokio = { workspace = true }
+
+# Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
+napi = { version = "2.12.2", default-features = false, features = [
+    "async",
+    "napi4",
+] }
+napi-derive = "2.12.2"
+
+[build-dependencies]
+napi-build = "2.0.1"
+
+[profile.release]
+lto = true
+strip = "symbols"
