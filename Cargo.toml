@@ -1,0 +1,23 @@
+[workspace]
+resolver = "2"
+members  = ["napi/*"]
+
+[workspace.package]
+authors      = ["Don Isaac"]
+categories   = ["compilers", "development-tools", "web-programming"]
+edition      = "2021"
+keywords     = ["JavaScript", "Jest", "Oxc", "TypeScript", "transpiler"]
+license      = "MIT"
+rust-version = "1.77"
+
+[workspace.dependencies]
+oxc_allocator   = { version = "0.15.0" }
+oxc_codegen     = { version = "0.15.0" }
+oxc_parser      = { version = "0.15.0" }
+oxc_sourcemap   = { version = "0.15.0" }
+oxc_span        = { version = "0.15.0" }
+oxc_syntax      = { version = "0.15.0" }
+oxc_transformer = { version = "0.15.0" }
+
+itertools = { version = "0.13.0" }
+tokio     = { version = "1.38.0", features = ["rt-multi-thread"] }

@@ -1,0 +1,25 @@
+# Build Artifacts
+target
+**/*.node
+
+# Generated packages
+npm/*
+
+# Yarn berry without zero-installs
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+**/node_modules
+**/yarn-error.log
+
+# Editor files
+*.swp
+*.swo
+.idea
+
+# Misc
+.DS_Store
