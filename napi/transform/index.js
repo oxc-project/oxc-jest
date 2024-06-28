@@ -310,7 +310,8 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { transform, transformAsync } = nativeBinding
+const { ReactJsxRuntime, transform, transformAsync } = nativeBinding
 
+module.exports.ReactJsxRuntime = ReactJsxRuntime
 module.exports.transform = transform
 module.exports.transformAsync = transformAsync

@@ -1,15 +1,28 @@
 {
-  "name": "@oxc-jest/monorepo",
-  "version": "0.0.0",
-  "description": "A Jest transformer for transpiling JavaScript and TypeScript with Oxc",
-  "authors": ["Don Isaac", "Boshen", "Oxc Contributors"],
-  "license": "MIT",
-  "private": true,
-  "packageManager": "yarn@4.3.1",
-  "workspaces": [
-    "napi/*"
-  ],
-  "devDependencies": {
-    "oxlint": "^0.4.4"
-  }
+    "name": "@oxc-jest/monorepo",
+    "version": "0.0.0",
+    "description": "A Jest transformer for transpiling JavaScript and TypeScript with Oxc",
+    "authors": [
+        "Don Isaac",
+        "Boshen",
+        "Oxc Contributors"
+    ],
+    "repository": {
+        "url": "https://github.com/oxc-project/oxc-jest"
+    },
+    "license": "MIT",
+    "private": true,
+    "packageManager": "yarn@4.3.1",
+    "workspaces": [
+        "napi/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "build": "yarn workspaces foreach -ptA run build",
+        "lint": "oxlint --jest-plugin -D correctness -W suspicious -D no-await-in-loop -D no-accumulating-spread -D no-var-requires -D no-var -D throw-new-error"
+    },
+    "devDependencies": {
+        "oxlint": "^0.4.4",
+        "typescript": "^5.5.2"
+    }
 }

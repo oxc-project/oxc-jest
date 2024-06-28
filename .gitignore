@@ -1,6 +1,7 @@
 # Build Artifacts
 target
 **/*.node
+**/dist
 
 # Generated packages
 npm/*
@@ -23,3 +24,7 @@ npm/*
 
 # Misc
 .DS_Store
+
+# Temporary files
+tmp/
+*.tmp

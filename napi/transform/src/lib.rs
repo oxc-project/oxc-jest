@@ -11,10 +11,60 @@ use oxc_codegen::{Codegen, CodegenReturn};
 use oxc_parser::Parser;
 use oxc_sourcemap::SourceMap as OxcSourceMap;
 use oxc_span::SourceType;
-use oxc_transformer::{TransformOptions, Transformer};
+use oxc_transformer::{ReactJsxRuntime, ReactOptions, TransformOptions, Transformer};
 
 use itertools::Itertools;
 
+#[napi(object, js_name="TransformOptions")]
+#[derive(Debug, Default, Clone)]
+pub struct JsTransformOptions {
+    #[napi(ts_type = "ReactOptions")]
+    pub react: JsReactOptions,
+}
+
+impl From<JsTransformOptions> for TransformOptions {
+    fn from(options: JsTransformOptions) -> Self {
+        Self {
+            react: options.react.into(),
+            ..Default::default()
+        }
+    }
+}
+
+#[napi(object, js_name="ReactOptions")]
+#[derive(Debug, Default, Clone)]
+pub struct JsReactOptions {
+    pub jsx_plugin: bool,
+
+    #[napi(ts_type="ReactJsxRuntime")]
+    pub runtime: JsReactJsxRuntime 
+}
+
+impl From<JsReactOptions> for ReactOptions {
+    fn from(options: JsReactOptions) -> Self {
+        Self {
+            runtime: options.runtime.into(),
+            jsx_plugin: options.jsx_plugin,
+            ..Default::default()
+        }
+    }
+}
+
+#[napi(js_name="ReactJsxRuntime")]
+#[derive(Debug, Default, PartialEq, Eq)]
+pub enum JsReactJsxRuntime {
+    Classic,
+    #[default]
+    Automatic,
+}
+impl From<JsReactJsxRuntime> for ReactJsxRuntime {
+    fn from(runtime: JsReactJsxRuntime) -> Self {
+        match runtime {
+            JsReactJsxRuntime::Classic => ReactJsxRuntime::Classic,
+            JsReactJsxRuntime::Automatic => ReactJsxRuntime::Automatic,
+        }
+    }
+}
 // should match
 // [`EncodedSourceMap`](https://github.com/jridgewell/trace-mapping/blob/5a658b10d9b6dea9c614ff545ca9c4df895fee9e/src/types.ts#L14)
 // from `@jridgewell/trace-mapping`, since this is what Jest expects.
@@ -37,7 +87,9 @@ pub struct SourceMap {
     pub file: Option<String>,
     pub names: Vec<String>,
     pub source_root: Option<String>,
+    #[napi(ts_type = "(string | null)[]")]
     pub sources: Vec<Option<String>>,
+    #[napi(ts_type = "(string | null)[]")]
     pub sources_content: Option<Vec<Option<String>>>,
     pub version: u32,
     pub ignore_list: Option<Vec<u32>>,
@@ -104,7 +156,7 @@ pub fn transform(
     filename: String,
     source_text: String,
     // TODO
-    // options: Option<TransformOptions>,
+    options: Option<JsTransformOptions>,
 ) -> Result<TransformResult, Error> {
     let source_type =
         SourceType::from_path(&filename).map_err(|err| Error::new(Status::InvalidArg, err.0))?;
@@ -126,14 +178,14 @@ pub fn transform(
     }
 
     let path = Path::new(&filename);
-    let options = TransformOptions::default();
+    let transform_options = options.unwrap_or_default().into();
     let ret = Transformer::new(
         &allocator,
         path,
         source_type,
         &source_text,
         trivias,
-        options,
+        transform_options,
     )
     .build(&mut program);
     if let Err(errors) = ret {
@@ -162,9 +214,9 @@ pub async fn transform_async(
     filename: String,
     source_text: String,
     // TODO
-    // options: Option<TransformOptions>,
+    options: Option<JsTransformOptions>,
 ) -> Result<TransformResult, Error> {
-    tokio::spawn(async move { transform(filename, source_text) })
+    tokio::spawn(async move { transform(filename, source_text, options) })
         .await
         .map_err(|e| Error::from_reason(e.to_string()))?
 }
