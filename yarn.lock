@@ -402,11 +402,11 @@ __metadata:
   linkType: hard
 
 "@napi-rs/cli@npm:^2.18.3":
-  version: 2.18.3
-  resolution: "@napi-rs/cli@npm:2.18.3"
+  version: 2.18.4
+  resolution: "@napi-rs/cli@npm:2.18.4"
   bin:
     napi: scripts/index.js
-  checksum: 10c0/4d91fe84551a3775cbf93f6340c8b6a87dc653248f90c459fb996ea689ff52ba698a7620ad08713b3b97baf0a675fe2d4cac83a9e842e56cdfbf204c7f5f01d5
+  checksum: 10c0/cb80bc86687ba01077a0faa8d38198bc632b7caacf3a42ec42c3ec04700084ca26be9eec13bf7ac7da90e6afb46c65a39de8a86825a53b74dec2f2f459c0a7ea
   languageName: node
   linkType: hard
 
@@ -464,10 +464,18 @@ __metadata:
   resolution: "@oxc-jest/monorepo@workspace:."
   dependencies:
     oxlint: "npm:^0.4.4"
+    typescript: "npm:^5.5.2"
   languageName: unknown
   linkType: soft
 
-"@oxc-jest/transform@npm:*, @oxc-jest/transform@workspace:napi/transform":
+"@oxc-jest/transform@file:../../napi/transform::locator=oxc-jest%40workspace%3Apackages%2Fjest":
+  version: 0.0.0
+  resolution: "@oxc-jest/transform@file:../../napi/transform#../../napi/transform::hash=a4d6c6&locator=oxc-jest%40workspace%3Apackages%2Fjest"
+  checksum: 10c0/db7d78aab5d7c6b6c784e5abcf0e74a22f55d7865c8f66c47a26b8323ef4e4fa8db8bb263e859521238a8157519793bbad43959595c8a48d08ae03442c0d80e3
+  languageName: node
+  linkType: hard
+
+"@oxc-jest/transform@workspace:napi/transform":
   version: 0.0.0-use.local
   resolution: "@oxc-jest/transform@workspace:napi/transform"
   dependencies:
@@ -2390,7 +2398,7 @@ __metadata:
   dependencies:
     "@jest/create-cache-key-function": "npm:^29.7.0"
     "@jest/transform": "npm:^29.7.0"
-    "@oxc-jest/transform": "npm:*"
+    "@oxc-jest/transform": "file:../../napi/transform"
     "@types/node": "npm:^20.14.8"
     jsonc-parser: "npm:^3.3.1"
     oxlint: "npm:^0.4.4"
