@@ -25,14 +25,14 @@ itertools = { workspace = true }
 tokio = { workspace = true }
 
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "2.12.2", default-features = false, features = [
+napi = { version = "2.16.8", default-features = false, features = [
     "async",
     "napi4",
 ] }
-napi-derive = "2.12.2"
+napi-derive = "2.16.6"
 
 [build-dependencies]
-napi-build = "2.0.1"
+napi-build = "2.1.3"
 
 [profile.release]
 lto = true
