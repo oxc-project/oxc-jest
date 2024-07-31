@@ -3,6 +3,8 @@
 #[macro_use]
 extern crate napi_derive;
 
+mod options;
+
 use std::path::Path;
 
 use napi::{Error, Status};
@@ -11,76 +13,30 @@ use oxc_codegen::{Codegen, CodegenReturn};
 use oxc_parser::Parser;
 use oxc_sourcemap::SourceMap as OxcSourceMap;
 use oxc_span::SourceType;
-use oxc_transformer::{ReactJsxRuntime, ReactOptions, TransformOptions, Transformer};
+use oxc_transformer::Transformer;
 
 use itertools::Itertools;
 
-#[napi(object, js_name="TransformOptions")]
-#[derive(Debug, Default, Clone)]
-pub struct JsTransformOptions {
-    #[napi(ts_type = "ReactOptions")]
-    pub react: JsReactOptions,
-}
+use options::*;
 
-impl From<JsTransformOptions> for TransformOptions {
-    fn from(options: JsTransformOptions) -> Self {
-        Self {
-            react: options.react.into(),
-            ..Default::default()
-        }
-    }
-}
-
-#[napi(object, js_name="ReactOptions")]
-#[derive(Debug, Default, Clone)]
-pub struct JsReactOptions {
-    pub jsx_plugin: bool,
-
-    #[napi(ts_type="ReactJsxRuntime")]
-    pub runtime: JsReactJsxRuntime 
-}
-
-impl From<JsReactOptions> for ReactOptions {
-    fn from(options: JsReactOptions) -> Self {
-        Self {
-            runtime: options.runtime.into(),
-            jsx_plugin: options.jsx_plugin,
-            ..Default::default()
-        }
-    }
-}
-
-#[napi(js_name="ReactJsxRuntime")]
-#[derive(Debug, Default, PartialEq, Eq)]
-pub enum JsReactJsxRuntime {
-    Classic,
-    #[default]
-    Automatic,
-}
-impl From<JsReactJsxRuntime> for ReactJsxRuntime {
-    fn from(runtime: JsReactJsxRuntime) -> Self {
-        match runtime {
-            JsReactJsxRuntime::Classic => ReactJsxRuntime::Classic,
-            JsReactJsxRuntime::Automatic => ReactJsxRuntime::Automatic,
-        }
-    }
-}
-// should match
-// [`EncodedSourceMap`](https://github.com/jridgewell/trace-mapping/blob/5a658b10d9b6dea9c614ff545ca9c4df895fee9e/src/types.ts#L14)
-// from `@jridgewell/trace-mapping`, since this is what Jest expects.
-// export interface SourceMapV3 {
-//     file?: string | null;
-//     names: string[];
-//     sourceRoot?: string;
-//     sources: (string | null)[];
-//     sourcesContent?: (string | null)[];
-//     version: 3;
-//     ignoreList?: number[];
-//   }
-//
-//   export interface EncodedSourceMap extends SourceMapV3 {
-//     mappings: string;
-//   }
+/// should match
+/// [`EncodedSourceMap`](https://github.com/jridgewell/trace-mapping/blob/5a658b10d9b6dea9c614ff545ca9c4df895fee9e/src/types.ts#L14)
+/// from `@jridgewell/trace-mapping`, since this is what Jest expects.
+/// ```ts
+/// export interface SourceMapV3 {
+///   file?: string | null;
+///   names: string[];
+///   sourceRoot?: string;
+///   sources: (string | null)[];
+///   sourcesContent?: (string | null)[];
+///   version: 3;
+///   ignoreList?: number[];
+/// }
+///
+/// export interface EncodedSourceMap extends SourceMapV3 {
+///   mappings: string;
+/// }
+/// ```
 #[napi(object)]
 #[derive(Debug, Clone)]
 pub struct SourceMap {
@@ -96,39 +52,12 @@ pub struct SourceMap {
     pub mappings: String,
 }
 
-/// TODO: impl [`std::fmt::Display`] and maybe std::error::Error for [`oxc_sourcemap::Error`]
-///
-/// https://github.com/oxc-project/oxc/pull/3902
-fn from_oxc_error(err: oxc_sourcemap::Error) -> napi::Error {
-    match err {
-        oxc_sourcemap::Error::VlqLeftover => {
-            Error::from_reason("a VLQ string was malformed and data was left over")
-        }
-        oxc_sourcemap::Error::VlqNoValues => {
-            Error::from_reason("a VLQ string was empty and no values could be decoded")
-        }
-        oxc_sourcemap::Error::VlqOverflow => {
-            Error::from_reason("The input encoded a number that didn't fit into i64")
-        }
-        oxc_sourcemap::Error::BadJson(err) => {
-            Error::from_reason(format!("JSON parsing error: {err}"))
-        }
-        oxc_sourcemap::Error::BadSegmentSize(size) => {
-            Error::from_reason(format!("Mapping segment had an unsupported size of {size}"))
-        }
-        oxc_sourcemap::Error::BadSourceReference(idx) => Error::from_reason(format!(
-            "Reference to non-existing source at position {idx}"
-        )),
-        oxc_sourcemap::Error::BadNameReference(idx) => {
-            Error::from_reason(format!("Reference to non-existing name at position {idx}"))
-        }
-    }
-}
-
 impl TryFrom<OxcSourceMap> for SourceMap {
     type Error = napi::Error;
     fn try_from(sourcemap: OxcSourceMap) -> Result<Self, Self::Error> {
-        let mappings = sourcemap.to_json_string().map_err(from_oxc_error)?;
+        let mappings = sourcemap
+            .to_json_string()
+            .map_err(|e| Error::from_reason(format!("{e}")))?;
         // TODO: do not clone once fields are exposed from oxc_sourcemap
         Ok(Self {
             file: sourcemap.get_file().map(ToString::to_string),
@@ -158,6 +87,7 @@ pub fn transform(
     // TODO
     options: Option<JsTransformOptions>,
 ) -> Result<TransformResult, Error> {
+    let options = options.unwrap_or_default();
     let source_type =
         SourceType::from_path(&filename).map_err(|err| Error::new(Status::InvalidArg, err.0))?;
     let allocator = Allocator::default();
@@ -178,7 +108,7 @@ pub fn transform(
     }
 
     let path = Path::new(&filename);
-    let transform_options = options.unwrap_or_default().into();
+    let transform_options = options.clone().into();
     let ret = Transformer::new(
         &allocator,
         path,
@@ -188,24 +118,34 @@ pub fn transform(
         transform_options,
     )
     .build(&mut program);
-    if let Err(errors) = ret {
-        if !errors.is_empty() {
-            return Err(Error::from_reason(format!("{}", errors[0])));
-        }
+
+    if !ret.errors.is_empty() {
+        return Err(Error::from_reason(format!("{}", ret.errors[0])));
     }
 
     // TODO: source maps before transforming
     let CodegenReturn {
         source_text,
         source_map,
-    } = Codegen::<false>::new()
-        .enable_source_map(&filename, &source_text)
-        .build(&program);
+    } = if options.codegen.compress.is_some() {
+        let mut codegen = Codegen::<true>::new();
+        if options.codegen.source_map {
+            codegen = codegen.enable_source_map(&filename, &source_text)
+        }
+        codegen.build(&program)
+    } else {
+        let mut codegen = Codegen::<false>::new();
+        if options.codegen.source_map {
+            codegen = codegen.enable_source_map(&filename, &source_text)
+        }
+        codegen.build(&program)
+    };
 
-    let source_map = source_map.map(SourceMap::try_from).transpose()?;
+    let _source_map = source_map.map(SourceMap::try_from).transpose()?;
     Ok(TransformResult {
         source_text,
-        source_map: source_map.map(SourceMap::from),
+        // source_map: source_map.map(SourceMap::from),
+        source_map: None,
     })
 }
 
