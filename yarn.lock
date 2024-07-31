@@ -470,8 +470,8 @@ __metadata:
 
 "@oxc-jest/transform@file:../../napi/transform::locator=oxc-jest%40workspace%3Apackages%2Fjest":
   version: 0.0.0
-  resolution: "@oxc-jest/transform@file:../../napi/transform#../../napi/transform::hash=e10d05&locator=oxc-jest%40workspace%3Apackages%2Fjest"
-  checksum: 10c0/851b09eeae47effd7fce660d3911b32f519976497bea1e2172c7786cedb7714e4e6c2fa1860f25760242f7a672b8465994eb1794cc449cb2a6bb12af8c8ca82f
+  resolution: "@oxc-jest/transform@file:../../napi/transform#../../napi/transform::hash=9990bc&locator=oxc-jest%40workspace%3Apackages%2Fjest"
+  checksum: 10c0/021a24b17e9d24dd3ec9a63c57b28461411dc2b36119036ba39c39835111edff12e81397f0c848fd01cc5a60643dcd5f9f88d819021feee7d607c66043c707b9
   languageName: node
   linkType: hard
 
