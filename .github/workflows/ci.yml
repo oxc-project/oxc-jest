@@ -37,15 +37,8 @@ jobs:
               with:
                 components: rustfmt clippy
                 restore-cache: false
-            - uses: actions/setup-node@v4
-              with:
-                  node-version: '22'
-                  cache: 'yarn'
-
             - run: cargo fmt -- --check
             - run: cargo clippy -- -D warnings
-            - run: npx oxlint
-            - run: yarn lint
 
     lint-ts:
         runs-on: ubuntu-latest
