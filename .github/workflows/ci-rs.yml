@@ -60,4 +60,4 @@ jobs:
                   # cache `target` directory to avoid download crates
                   save-cache: ${{ github.ref_name == 'main' }}
                   cache-key: warm
-            - run: cargo build --release
+            - run: cargo build

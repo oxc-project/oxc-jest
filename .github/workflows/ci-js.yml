@@ -1,5 +1,5 @@
 
-name: CI (Rust)
+name: CI (Node)
 on:
     push:
         branches: [main]
