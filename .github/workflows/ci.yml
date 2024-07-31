@@ -1,0 +1,49 @@
+name: CI
+on:
+    push:
+        branches: [main]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '!.github/workflows/ci.yml'
+            - '!.github/actions/clone-submodules/action.yml'
+    pull_request:
+        branches: [main]
+        types: [opened, synchronize]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '!.github/workflows/ci.yml'
+            - '!.github/actions/clone-submodules/action.yml'
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: Boshen/setup-rust@main
+              with:
+                  # warm cache factory for all other CI jobs
+                  # cache `target` directory to avoid download crates
+                  save-cache: ${{ github.ref_name == 'main' }}
+                  cache-key: warm
+            - run: cargo check
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: Boshen/setup-rust@main
+              with:
+                  # warm cache factory for all other CI jobs
+                  # cache `target` directory to avoid download crates
+                  save-cache: ${{ github.ref_name == 'main' }}
+                  cache-key: warm
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: '22'
+                  cache: 'yarn'
+
+            - run: cargo fmt -- --check
+            - run: cargo clippy -- -D warnings
+            - run: npx oxlint
+            - run: yarn lint
