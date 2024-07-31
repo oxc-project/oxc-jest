@@ -1,22 +1,32 @@
-name: CI
+name: CI (Rust)
 on:
     push:
         branches: [main]
         paths-ignore:
             - '**/*.md'
             - '**/*.yml'
-            - '!.github/workflows/ci.yml'
-            - '!.github/actions/clone-submodules/action.yml'
+            - '**/*.ts'
+            - '**/*.js'
+            - '**/*.d.ts'
+            - '**/package.json'
+            - '**/tsconfig.json'
+            - '**/.prettierrc.json'
+            - 'yarn.lock'
+            - '!.github/workflows/ci-rs.yml'
     pull_request:
         branches: [main]
         types: [opened, synchronize]
         paths-ignore:
             - '**/*.md'
             - '**/*.yml'
-            - '!.github/workflows/ci.yml'
-            - '!.github/actions/clone-submodules/action.yml'
-env:
-    NODE_VERSION: 22
+            - '**/*.ts'
+            - '**/*.js'
+            - '**/*.d.ts'
+            - '**/package.json'
+            - '**/tsconfig.json'
+            - '**/.prettierrc.json'
+            - 'yarn.lock'
+            - '!.github/workflows/ci-rs.yml'
 jobs:
     check:
         runs-on: ubuntu-latest
@@ -40,14 +50,14 @@ jobs:
             - run: cargo fmt -- --check
             - run: cargo clippy -- -D warnings
 
-    lint-ts:
+    build:
         runs-on: ubuntu-latest
         steps:
             - uses: taiki-e/checkout-action@v1
-            - uses: actions/setup-node@v4
+            - uses: Boshen/setup-rust@main
               with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: 'yarn'
-
-            - run: yarn --no-immutable
-            - run: yarn lint
+                  # warm cache factory for all other CI jobs
+                  # cache `target` directory to avoid download crates
+                  save-cache: ${{ github.ref_name == 'main' }}
+                  cache-key: warm
+            - run: cargo build --release

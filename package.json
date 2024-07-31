@@ -18,7 +18,7 @@
         "packages/*"
     ],
     "scripts": {
-        "build": "yarn workspaces foreach -ptA run build",
+        "build": "yarn workspaces foreach -Apt run build",
         "lint": "oxlint --jest-plugin -D correctness -W suspicious -D no-await-in-loop -D no-accumulating-spread -D no-var-requires -D no-var -D throw-new-error"
     },
     "devDependencies": {
