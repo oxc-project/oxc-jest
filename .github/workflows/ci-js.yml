@@ -1,4 +1,3 @@
-
 name: CI (Node)
 on:
     push:
@@ -28,6 +27,7 @@ env:
     NODE_VERSION: 22
 jobs:
     lint-and-check:
+        name: Lint and Check
         runs-on: ubuntu-latest
         steps:
             - uses: taiki-e/checkout-action@v1
@@ -38,9 +38,5 @@ jobs:
 
             - run: yarn --no-immutable
             - run: yarn lint
-            - name: typecheck
-              run: |
-                pushd napi/transform
-                yarn typecheck
-              
-
+            - run: yarn typecheck
+              working-directory: napi/transform
