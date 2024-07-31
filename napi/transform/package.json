@@ -36,8 +36,9 @@
   },
   "scripts": {
     "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
+    "build": "napi build --platform --release && yarn postbuild",
+    "build:debug": "napi build --platform && yarn postbuild",
+    "postbuild": "node bin/typegen-hack.js",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "universal": "napi universal",

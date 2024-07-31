@@ -1,0 +1,8 @@
+{
+    "compilerOptions": {
+        "noEmit": true,
+        "rootDir": ".",
+        "strict": true,
+        "allowJs": true,
+    }
+}
