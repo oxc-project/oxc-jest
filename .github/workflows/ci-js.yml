@@ -1,0 +1,42 @@
+name: CI (Node)
+on:
+    push:
+        branches: [main]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '**/*.rs'
+            - '**/Cargo.toml'
+            - 'Cargo.lock'
+            - 'rust-toolchain.toml'
+            - '.taplo.toml'
+            - '!.github/workflows/ci-js.yml'
+    pull_request:
+        branches: [main]
+        types: [opened, synchronize]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '**/*.rs'
+            - '**/Cargo.toml'
+            - 'Cargo.lock'
+            - 'rust-toolchain.toml'
+            - '.taplo.toml'
+            - '!.github/workflows/ci-js.yml'
+env:
+    NODE_VERSION: 22
+jobs:
+    lint-and-check:
+        name: Lint and Check
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'yarn'
+
+            - run: yarn --no-immutable
+            - run: yarn lint --format github
+            - run: yarn typecheck
+              working-directory: napi/transform

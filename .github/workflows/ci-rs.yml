@@ -1,0 +1,65 @@
+name: CI (Rust)
+on:
+    push:
+        branches: [main]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '**/*.ts'
+            - '**/*.js'
+            - '**/*.d.ts'
+            - '**/package.json'
+            - '**/tsconfig.json'
+            - '**/.prettierrc.json'
+            - 'yarn.lock'
+            - '!.github/workflows/ci-rs.yml'
+    pull_request:
+        branches: [main]
+        types: [opened, synchronize]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '**/*.ts'
+            - '**/*.js'
+            - '**/*.d.ts'
+            - '**/package.json'
+            - '**/tsconfig.json'
+            - '**/.prettierrc.json'
+            - 'yarn.lock'
+            - '!.github/workflows/ci-rs.yml'
+jobs:
+    check:
+        name: Check
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: Boshen/setup-rust@main
+              with:
+                  # warm cache factory for all other CI jobs
+                  # cache `target` directory to avoid download crates
+                  save-cache: ${{ github.ref_name == 'main' }}
+                  cache-key: warm
+            - run: cargo check
+    fmt:
+        name: Format
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: Boshen/setup-rust@main
+              with:
+                  components: rustfmt
+                  tools: taplo-cli
+                  restore-cache: false
+            - run: cargo fmt --all -- --check
+            - run: taplo lint
+
+    clippy:
+        name: Clippy
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: Boshen/setup-rust@main
+              with:
+                  components: clippy
+                  restore-cache: false
+            - run: cargo clippy --no-deps -- -D warnings

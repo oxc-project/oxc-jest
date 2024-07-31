@@ -7,7 +7,7 @@ pub struct JsTransformOptions {
     #[napi(ts_type = "ReactOptions")]
     pub react: JsReactOptions,
     #[napi(ts_type = "MinifyOptions")]
-    pub codegen: JsCodegenOptions
+    pub codegen: JsCodegenOptions,
 }
 
 impl From<JsTransformOptions> for TransformOptions {
@@ -26,14 +26,14 @@ impl From<JsTransformOptions> for TransformOptions {
 pub struct JsCodegenOptions {
     #[napi(ts_type = "CompressOption | boolean")]
     pub compress: CompressOption,
-    pub source_map: bool
+    pub source_map: bool,
 }
 
 impl Default for JsCodegenOptions {
     fn default() -> Self {
         Self {
             compress: Default::default(),
-            source_map: true
+            source_map: true,
         }
     }
 }
@@ -44,7 +44,7 @@ pub enum CompressOption {
     #[default]
     None,
     Whitespace,
-    Fold
+    Fold,
 }
 
 impl CompressOption {
@@ -74,8 +74,7 @@ impl TryFrom<i32> for CompressOption {
             2 => Ok(Self::Fold),
             n => Err(napi::Error::new(
                 napi::Status::InvalidArg,
-                format!(
-                    "Invalid CompressOption value `{n}`: must be 0, 1, or 2."),
+                format!("Invalid CompressOption value `{n}`: must be 0, 1, or 2."),
             )),
         }
     }
@@ -91,9 +90,12 @@ impl TypeName for CompressOption {
 }
 
 impl FromNapiValue for CompressOption {
-    unsafe fn from_napi_value(env: napi::sys::napi_env, napi_val: napi::sys::napi_value) -> napi::Result<Self> {
+    unsafe fn from_napi_value(
+        env: napi::sys::napi_env,
+        napi_val: napi::sys::napi_value,
+    ) -> napi::Result<Self> {
         match type_of!(env, napi_val) {
-            Ok(ValueType::Undefined | ValueType::Null) => return Ok(Self::None),
+            Ok(ValueType::Undefined | ValueType::Null) => Ok(Self::None),
             Ok(ValueType::Boolean) => {
                 bool::from_napi_value(env, napi_val).map(CompressOption::from)
             }
@@ -101,14 +103,16 @@ impl FromNapiValue for CompressOption {
                 i32::from_napi_value(env, napi_val).and_then(CompressOption::try_from)
             }
             Ok(_) => todo!(),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
-
     }
 }
 
 impl ToNapiValue for CompressOption {
-    unsafe fn to_napi_value(env: napi::sys::napi_env, val: Self) -> napi::Result<napi::sys::napi_value> {
+    unsafe fn to_napi_value(
+        env: napi::sys::napi_env,
+        val: Self,
+    ) -> napi::Result<napi::sys::napi_value> {
         let val = match val {
             CompressOption::None => 0,
             CompressOption::Whitespace => 1,

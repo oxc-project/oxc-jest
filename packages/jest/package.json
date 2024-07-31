@@ -20,7 +20,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build:debug": "tsc"
   },
   "dependencies": {
     "@jest/create-cache-key-function": "^29.7.0",

@@ -1,0 +1,46 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '!.github/workflows/ci.yml'
+    pull_request:
+        branches: [main]
+        types: [opened, synchronize]
+        paths-ignore:
+            - '**/*.md'
+            - '**/*.yml'
+            - '!.github/workflows/ci.yml'
+
+env:
+    NODE_VERSION: 22
+
+jobs:
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: taiki-e/checkout-action@v1
+            - uses: Boshen/setup-rust@main
+              with:
+                  # warm cache factory for all other CI jobs
+                  # cache `target` directory to avoid download crates
+                  save-cache: ${{ github.ref_name == 'main' }}
+                  cache-key: warm
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: 'yarn'
+            - run: yarn --no-immutable
+            - run: cargo check
+            # gets done by yarn build, but `yarn workspaces run` suppresses
+            # output and this is a good way to check for errors. Cached results
+            # will be used in following step.
+            - run: yarn napi build
+              working-directory: napi/transform
+            - run: yarn build:debug
+            # FIXME: yarn.lock always changes
+            # - run: git diff --exit-code
