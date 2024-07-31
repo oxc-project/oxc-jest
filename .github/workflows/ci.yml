@@ -36,6 +36,11 @@ jobs:
                   cache: 'yarn'
             - run: yarn --no-immutable
             - run: cargo check
-            - run: yarn build
+            # gets done by yarn build, but `yarn workspaces run` suppresses
+            # output and this is a good way to check for errors. Cached results
+            # will be used in following step.
+            - run: napi build --release
+              working-directory: napi/transform
+            - run: yarn build:debug
             # FIXME: yarn.lock always changes
-            # - run: git diff --exit-code 
+            # - run: git diff --exit-code
