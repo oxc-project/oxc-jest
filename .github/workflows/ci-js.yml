@@ -37,6 +37,6 @@ jobs:
                   cache: 'yarn'
 
             - run: yarn --no-immutable
-            - run: yarn lint
+            - run: yarn lint --format github
             - run: yarn typecheck
               working-directory: napi/transform

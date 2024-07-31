@@ -8,7 +8,7 @@ import createCacheKey from '@jest/create-cache-key-function'
  * @note this must be exactly named `createTransformer` to be picked up by Jest.
  */
 export const createTransformer: TransformerCreator<Transformer<Options>, Options> = async options => {
-    debugger;
+    
     const config: Config = await createTransformConfig(options)
     console.log('[oxc-jest] createTransformer')
     console.log(config)
