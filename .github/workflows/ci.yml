@@ -39,7 +39,7 @@ jobs:
             # gets done by yarn build, but `yarn workspaces run` suppresses
             # output and this is a good way to check for errors. Cached results
             # will be used in following step.
-            - run: yarn napi build --release
+            - run: yarn napi build
               working-directory: napi/transform
             - run: yarn build:debug
             # FIXME: yarn.lock always changes
