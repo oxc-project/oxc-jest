@@ -34,10 +34,8 @@ jobs:
             - uses: taiki-e/checkout-action@v1
             - uses: Boshen/setup-rust@main
               with:
-                  # warm cache factory for all other CI jobs
-                  # cache `target` directory to avoid download crates
-                  save-cache: ${{ github.ref_name == 'main' }}
-                  cache-key: warm
+                components: rustfmt, clippy
+                restore-cache: false
             - uses: actions/setup-node@v4
               with:
                   node-version: '22'
