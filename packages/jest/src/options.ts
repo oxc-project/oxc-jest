@@ -30,7 +30,22 @@ const OptionsSchema = z.object({
                     }
                 }),
         })
-        .optional().default({ runtime: 'automatic', jsxPlugin: false })
+        .optional().default({ runtime: 'automatic', jsxPlugin: false }),
+
+    codegen: z.object({
+        compress: z.union([
+            z.boolean(),
+            z.enum(['none', 'whitespace', 'fold']).transform(compress => {
+                switch (compress) {
+                    case 'none': return 0
+                    case 'whitespace': return 1
+                    case 'fold': return 2
+                    default: return 0
+                }
+            })
+        ]).default('none'),
+        sourceMap: z.boolean().default(true)
+    }).default({})
 })
 
 /**
@@ -49,7 +64,7 @@ export const createTransformConfig = async (options?: Options): Promise<Config> 
     const packageJson = 'value' in packageJsonPromise ? packageJsonPromise.value : undefined
     const tsConfig = 'value' in tsConfigPromise ? tsConfigPromise.value : undefined
 
-    const resolvedOptions: Options = merge(
+    const resolvedOptions: Partial<Options> = merge(
         [packageJson, tsConfig, options].filter(<T>(x: T | undefined): x is T => !!x)
     )
 
