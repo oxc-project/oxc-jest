@@ -12,7 +12,7 @@
     },
     "license": "MIT",
     "private": true,
-    "packageManager": "yarn@4.3.1",
+    "packageManager": "yarn@4.4.0",
     "workspaces": [
         "napi/*",
         "packages/*"
@@ -23,7 +23,7 @@
         "lint": "oxlint --jest-plugin -D correctness -W suspicious -D no-await-in-loop -D no-accumulating-spread -D no-var-requires -D no-var -D throw-new-error"
     },
     "devDependencies": {
-        "oxlint": "^0.4.4",
+        "oxlint": "^0.7.0",
         "typescript": "^5.5.2"
     }
 }
