@@ -21,11 +21,12 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "build:debug": "tsc"
+    "build:debug": "tsc",
+    "clean": "rm -rf dist || true"
   },
   "dependencies": {
     "@jest/create-cache-key-function": "^29.7.0",
-    "@oxc-jest/transform": "file:../../napi/transform",
+    "@oxc-jest/transform": "*",
     "jsonc-parser": "^3.3.1",
     "zod": "^3.23.8"
   },

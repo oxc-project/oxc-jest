@@ -26,10 +26,8 @@
   "license": "MIT",
   "devDependencies": {
     "@napi-rs/cli": "^2.18.3",
-    "ava": "^6.0.1"
-  },
-  "ava": {
-    "timeout": "3m"
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.12"
   },
   "engines": {
     "node": ">= 10"
@@ -40,9 +38,10 @@
     "build:debug": "napi build --platform && yarn postbuild",
     "postbuild": "node bin/typegen-hack.js",
     "prepublishOnly": "napi prepublish -t npm",
-    "test": "ava",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "universal": "napi universal",
     "version": "napi version",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "clean": "rm *.node || true"
   }
 }

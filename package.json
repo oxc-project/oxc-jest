@@ -12,6 +12,7 @@
     },
     "license": "MIT",
     "private": true,
+    "type": "module",
     "packageManager": "yarn@4.3.1",
     "workspaces": [
         "napi/*",
@@ -20,7 +21,9 @@
     "scripts": {
         "build": "yarn workspaces foreach -Apt run build",
         "build:debug": "yarn workspaces foreach -Apt run 'build:debug'",
-        "lint": "oxlint --jest-plugin -D correctness -W suspicious -D no-await-in-loop -D no-accumulating-spread -D no-var-requires -D no-var -D throw-new-error"
+        "lint": "oxlint --jest-plugin -D correctness -W suspicious -D no-await-in-loop -D no-accumulating-spread -D no-var-requires -D no-var -D throw-new-error",
+        "clean": "yarn clean:js && cargo clean",
+        "clean:js": "yarn workspaces foreach -A run clean"
     },
     "devDependencies": {
         "oxlint": "^0.4.4",

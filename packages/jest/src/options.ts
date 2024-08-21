@@ -30,22 +30,31 @@ const OptionsSchema = z.object({
                     }
                 }),
         })
-        .optional().default({ runtime: 'automatic', jsxPlugin: false }),
+        .optional()
+        .default({ runtime: 'automatic', jsxPlugin: false }),
 
-    codegen: z.object({
-        compress: z.union([
-            z.boolean(),
-            z.enum(['none', 'whitespace', 'fold']).transform(compress => {
-                switch (compress) {
-                    case 'none': return 0
-                    case 'whitespace': return 1
-                    case 'fold': return 2
-                    default: return 0
-                }
-            })
-        ]).default('none'),
-        sourceMap: z.boolean().default(true)
-    }).default({})
+    codegen: z
+        .object({
+            compress: z
+                .union([
+                    z.boolean(),
+                    z.enum(['none', 'whitespace', 'fold']).transform(compress => {
+                        switch (compress) {
+                            case 'none':
+                                return 0
+                            case 'whitespace':
+                                return 1
+                            case 'fold':
+                                return 2
+                            default:
+                                return 0
+                        }
+                    }),
+                ])
+                .default('none'),
+            sourceMap: z.boolean().default(true),
+        })
+        .default({}),
 })
 
 /**
