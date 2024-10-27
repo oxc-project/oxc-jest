@@ -9,8 +9,9 @@ use std::path::Path;
 
 use napi::{Error, Status};
 use oxc_allocator::Allocator;
-use oxc_codegen::{Codegen, CodegenReturn};
+use oxc_codegen::{CodeGenerator, CodegenOptions, CodegenReturn};
 use oxc_parser::Parser;
+use oxc_semantic::SemanticBuilder;
 use oxc_sourcemap::SourceMap as OxcSourceMap;
 use oxc_span::SourceType;
 use oxc_transformer::Transformer;
@@ -55,9 +56,7 @@ pub struct SourceMap {
 impl TryFrom<OxcSourceMap> for SourceMap {
     type Error = napi::Error;
     fn try_from(sourcemap: OxcSourceMap) -> Result<Self, Self::Error> {
-        let mappings = sourcemap
-            .to_json_string()
-            .map_err(|e| Error::from_reason(format!("{e}")))?;
+        let mappings = sourcemap.to_json_string();
         // TODO: do not clone once fields are exposed from oxc_sourcemap
         Ok(Self {
             file: sourcemap.get_file().map(ToString::to_string),
@@ -89,13 +88,12 @@ pub fn transform(
 ) -> Result<TransformResult, Error> {
     let options = options.unwrap_or_default();
     let source_type =
-        SourceType::from_path(&filename).map_err(|err| Error::new(Status::InvalidArg, err.0))?;
+        SourceType::from_path(&filename).map_err(|err| Error::new(Status::InvalidArg, err))?;
     let allocator = Allocator::default();
     let parser_ret = Parser::new(&allocator, &source_text, source_type).parse();
 
     let errors = parser_ret.errors;
     let mut program = parser_ret.program;
-    let trivias = parser_ret.trivias;
 
     if !errors.is_empty() {
         let errors = errors
@@ -107,43 +105,33 @@ pub fn transform(
         return Err(Error::new(Status::GenericFailure, message));
     }
 
+    let (symbols, scopes) = SemanticBuilder::new()
+        .build(&program)
+        .semantic
+        .into_symbol_table_and_scope_tree();
     let path = Path::new(&filename);
     let transform_options = options.clone().into();
-    let ret = Transformer::new(
-        &allocator,
-        path,
-        source_type,
-        &source_text,
-        trivias,
-        transform_options,
-    )
-    .build(&mut program);
+    let ret = Transformer::new(&allocator, path, transform_options).build_with_symbols_and_scopes(
+        symbols,
+        scopes,
+        &mut program,
+    );
 
     if !ret.errors.is_empty() {
         return Err(Error::from_reason(format!("{}", ret.errors[0])));
     }
 
     // TODO: source maps before transforming
-    let CodegenReturn {
-        source_text,
-        source_map,
-    } = if options.codegen.compress.is_some() {
-        let mut codegen = Codegen::<true>::new();
-        if options.codegen.source_map {
-            codegen = codegen.enable_source_map(&filename, &source_text)
-        }
-        codegen.build(&program)
-    } else {
-        let mut codegen = Codegen::<false>::new();
-        if options.codegen.source_map {
-            codegen = codegen.enable_source_map(&filename, &source_text)
-        }
-        codegen.build(&program)
-    };
+    let CodegenReturn { code, map } = CodeGenerator::new()
+        .with_options(CodegenOptions {
+            source_map_path: Some(path.to_path_buf()),
+            ..CodegenOptions::default()
+        })
+        .build(&program);
 
-    let _source_map = source_map.map(SourceMap::try_from).transpose()?;
+    let _source_map = map.map(SourceMap::try_from).transpose()?;
     Ok(TransformResult {
-        source_text,
+        source_text: code,
         // source_map: source_map.map(SourceMap::from),
         source_map: None,
     })
