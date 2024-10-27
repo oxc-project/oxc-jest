@@ -1,5 +1,5 @@
 use napi::{bindgen_prelude::*, ValueType};
-use oxc_transformer::{ReactJsxRuntime, ReactOptions, TransformOptions};
+use oxc_transformer::{JsxOptions, JsxRuntime, TransformOptions};
 
 #[napi(object, js_name = "TransformOptions")]
 #[derive(Debug, Default, Clone)]
@@ -13,7 +13,7 @@ pub struct JsTransformOptions {
 impl From<JsTransformOptions> for TransformOptions {
     fn from(options: JsTransformOptions) -> Self {
         Self {
-            react: options.react.into(),
+            jsx: options.react.into(),
             ..Default::default()
         }
     }
@@ -133,7 +133,7 @@ pub struct JsReactOptions {
     pub runtime: JsReactJsxRuntime,
 }
 
-impl From<JsReactOptions> for ReactOptions {
+impl From<JsReactOptions> for JsxOptions {
     fn from(options: JsReactOptions) -> Self {
         Self {
             runtime: options.runtime.into(),
@@ -150,11 +150,11 @@ pub enum JsReactJsxRuntime {
     #[default]
     Automatic,
 }
-impl From<JsReactJsxRuntime> for ReactJsxRuntime {
+impl From<JsReactJsxRuntime> for JsxRuntime {
     fn from(runtime: JsReactJsxRuntime) -> Self {
         match runtime {
-            JsReactJsxRuntime::Classic => ReactJsxRuntime::Classic,
-            JsReactJsxRuntime::Automatic => ReactJsxRuntime::Automatic,
+            JsReactJsxRuntime::Classic => JsxRuntime::Classic,
+            JsReactJsxRuntime::Automatic => JsxRuntime::Automatic,
         }
     }
 }
