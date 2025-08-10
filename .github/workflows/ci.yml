@@ -23,14 +23,14 @@ jobs:
         name: Build
         runs-on: ubuntu-latest
         steps:
-            - uses: taiki-e/checkout-action@v1
+            - uses: taiki-e/checkout-action@b13d20b7cda4e2f325ef19895128f7ff735c0b3d # v1.3.1
             - uses: Boshen/setup-rust@main
               with:
                   # warm cache factory for all other CI jobs
                   # cache `target` directory to avoid download crates
                   save-cache: ${{ github.ref_name == 'main' }}
                   cache-key: warm
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: 'yarn'
