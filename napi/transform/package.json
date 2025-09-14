@@ -25,7 +25,7 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@napi-rs/cli": "^2.18.3",
+    "@napi-rs/cli": "^3.0.0",
     "jest": "^30.0.0",
     "@types/jest": "^30.0.0"
   },
