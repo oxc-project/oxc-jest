@@ -34,7 +34,7 @@
     "@jest/transform": "^30.0.0",
     "@types/node": "^24.0.0",
     "oxlint": "^1.0.0",
-    "type-fest": "^4.20.1",
+    "type-fest": "^5.0.0",
     "typescript": "^5.5.2"
   }
 }
