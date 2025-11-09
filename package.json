@@ -13,7 +13,7 @@
     "license": "MIT",
     "private": true,
     "type": "module",
-    "packageManager": "yarn@4.10.3",
+    "packageManager": "yarn@4.11.0",
     "workspaces": [
         "napi/*",
         "packages/*"
